@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-sc# D&D Battle Grid
+
+A lightweight, browser-based D&D 5e combat grid. No login, server, dependencies, or build step required.
+
+## Run locally
+Open `index.html` in a modern web browser.
+
+## Publish with GitHub Pages
+1. Create a new GitHub repository.
+2. Upload `index.html` (and this README) to the repository's root.
+3. In the repository, open **Settings → Pages**.
+4. Under **Build and deployment**, choose **Deploy from a branch**.
+5. Select the `main` branch and `/ (root)`, then save.
+6. Wait for GitHub Pages to publish the site; GitHub will show its URL in the Pages settings.
+
+## Notes
+- Each grid square represents 10 feet.
+- Creature speeds and initiative can be customized.
+- The movement and grid-distance implementation is a simplified adaptation for a 10-foot grid. Check the official rules for edge cases and table-specific rulings.
+ale=1">
+<title>Initiative — D&D Battle Grid</title>
+<style>
+:root{--bg:#10151b;--panel:#19212a;--panel2:#202b36;--line:#33414e;--text:#edf2f5;--muted:#9eabb6;--gold:#e5b85c;--blue:#69b8e8;--red:#e57d76;--green:#7bc6a4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+header{height:66px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#141b22}
+.brand{display:flex;gap:11px;align-items:center;font-weight:800;letter-spacing:.08em}.sigil{width:32px;height:32px;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;border-radius:8px;font-size:18px}
+header small{color:var(--muted);font-weight:500;letter-spacing:0}
+.layout{display:grid;grid-template-columns:290px minmax(400px,1fr) 270px;gap:14px;padding:14px;max-width:1800px;margin:auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 12px}
+h3{font-size:14px;margin:0 0 8px}.field{display:grid;gap:5px;margin-bottom:10px}.field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+input,select,button{font:inherit;color:var(--text)}input,select{width:100%;background:#111820;border:1px solid var(--line);border-radius:7px;padding:9px;outline:none}input:focus,select:focus{border-color:var(--gold)}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;cursor:pointer;font-weight:650}button:hover{border-color:var(--gold)}button.primary{background:var(--gold);color:#211b10;border-color:var(--gold)}button.danger{color:#ffaaa3}button:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:8px}.row>*{flex:1}.hint{font-size:11px;color:var(--muted);margin:8px 0 0}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs button{flex:1;font-size:12px}.tabs button.active{border-color:var(--gold);color:var(--gold)}
+.board-wrap{background:#0c1116;border:1px solid var(--line);border-radius:12px;overflow:auto;min-height:600px;display:flex;align-items:center;justify-content:center;padding:12px}
+canvas{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
+.board-head{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px;gap:8px;flex-wrap:wrap}.board-head strong{font-size:15px}.board-actions{display:flex;gap:6px;flex-wrap:wrap}.board-actions button{font-size:12px;padding:7px 9px}
+.stat{background:#111820;border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:8px}.stat .big{font-size:22px;font-weight:800;color:var(--gold)}.stat small{color:var(--muted)}
+.unit{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:8px;margin-bottom:7px;background:#151d25;cursor:pointer}.unit.active{border-color:var(--gold);background:#29271f}.dot{width:11px;height:11px;border-radius:50%;flex:none}.unit-info{flex:1;min-width:0}.unit-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.unit-info small{color:var(--muted)}.unit .mini{font-size:11px;color:var(--muted)}
+.turn-current{border-color:var(--gold);box-shadow:inset 3px 0 var(--gold)}
+#selectedInfo{font-size:12px;color:var(--muted);line-height:1.7}.meter{height:7px;background:#0d1319;border-radius:10px;overflow:hidden;margin:7px 0}.meter span{display:block;height:100%;background:var(--green);width:0}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#f0c66d;color:#1b1a16;padding:9px 14px;border-radius:8px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5}#toast.show{opacity:1}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:9px}.legend span{display:flex;align-items:center;gap:5px}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+.rules{font-size:11px;color:var(--muted);line-height:1.55}.rules a{color:var(--blue)}
+@media(max-width:1050px){.layout{grid-template-columns:260px minmax(360px,1fr)}.right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}.right .panel{height:max-content}}
+@media(max-width:700px){header{padding:0 13px}.layout{display:flex;flex-direction:column;padding:9px}.board-wrap{min-height:360px;justify-content:flex-start}.right{display:flex;flex-direction:column}.left{order:2}.center{order:1}.right{order:3}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="sigil">⚔</div><div>INITIATIVE <small style="display:block">D&D 5E BATTLE GRID</small></div></div><small>Local session · No account required</small></header>
+<main class="layout">
+<aside class="left panel">
+<h2>Creature roster</h2>
+<div class="field"><label>Creature name</label><input id="name" placeholder="e.g. Goblin / Aria"></div>
+<div class="row">
+ <div class="field"><label>Side</label><select id="team"><option value="player">Player</option><option value="ally">Ally</option><option value="enemy">Enemy</option><option value="neutral">Neutral</option></select></div>
+ <div class="field"><label>Speed (ft)</label><input id="speed" type="number" min="0" step="5" value="30"></div>
+</div>
+<div class="row">
+ <div class="field"><label>Initiative</label><input id="initiative" type="number" value="10"></div>
+ <div class="field"><label>Size (grid)</label><select id="size"><option value="1">1 × 1</option><option value="2">2 × 2</option><option value="3">3 × 3</option></select></div>
+</div>
+<button class="primary" id="add" style="width:100%">＋ Add creature</button>
+<p class="hint">New creatures appear in the first open square. Select a creature to edit or remove it.</p>
+<hr>
+<h2>Initiative order</h2>
+<div id="roster"></div>
+<div class="row"><button id="sort">Sort initiative</button><button id="clear" class="danger">Clear board</button></div>
+</aside>
+<section class="center">
+<div class="board-head"><strong>Battlefield <span style="color:var(--muted);font-weight:500">· 10 ft per square</span></strong><div class="board-actions">
+<button id="measure">↔ Measure distance</button><button id="terrain">◇ Difficult terrain: off</button><button id="gridSize">Grid: 18 × 14</button>
+</div></div>
+<div class="board-wrap"><canvas id="board" width="900" height="700"></canvas></div>
+<div class="legend"><span><i class="dot" style="background:#66b9e8"></i> Player</span><span><i class="dot" style="background:#79c6a0"></i> Ally</span><span><i class="dot" style="background:#e47b73"></i> Enemy</span><span><i class="dot" style="background:#b8a2dc"></i> Neutral</span><span>▧ Difficult terrain</span></div>
+<p class="hint">Click a creature to select it, then drag it to move. You can move the active creature only once combat begins. Before combat starts, any creature can be repositioned.</p>
+</section>
+<aside class="right">
+<div class="panel">
+<h2>Combat tracker</h2>
+<div class="stat"><small>ROUND</small><div class="big" id="round">—</div><small id="turnLabel">Combat not started</small></div>
+<div id="activeInfo" class="stat"><small>ACTIVE CREATURE</small><div style="font-weight:700;margin-top:5px" id="activeName">No active turn</div><div class="meter"><span id="movementBar"></span></div><small id="movementText">Movement remaining: —</small></div>
+<div class="row"><button class="primary" id="start">Start combat</button><button id="next" disabled>Next turn →</button></div>
+<p class="hint">Initiative order determines turns. Movement refreshes when a creature's next turn begins.</p>
+</div>
+<div class="panel">
+<h2>Selected creature</h2><div id="selectedInfo">Select a token on the battlefield or in the roster.</div>
+<div class="row" style="margin-top:10px"><button id="edit" disabled>Edit</button><button id="remove" class="danger" disabled>Remove</button></div>
+<hr>
+<h2>Distance tool</h2><div id="distanceInfo" class="rules">Choose “Measure distance,” then click two creatures to calculate their grid distance.</div>
+</div>
+<div class="panel rules">
+<h2>Movement rules used</h2>
+Each square represents 10 feet (your custom grid scale). A creature spends 10 feet to enter an adjacent square, including diagonals. Difficult terrain costs double. Speed is taken from the creature's stat block or character sheet.
+<br><br>
+This adapts the 2014 D&D 5e movement rules to your 10-foot grid. The official grid variant uses 5-foot squares; diagonal movement can use an optional alternating-cost rule.
+<br><br>
+<a href="https://www.dndbeyond.com/sources/dnd/basic-rules-2014/combat#MovementandPosition" target="_blank" rel="noreferrer">2014 Basic Rules: Movement and Position ↗</a><br>
+<a href="https://www.dndbeyond.com/sources/dnd/basic-rules-2014/monsters" target="_blank" rel="noreferrer">Monster stat blocks: Speed ↗</a>
+</div>
+</aside>
+</main>
+<div id="toast"></div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id), canvas=$('board'),ctx=canvas.getContext('2d');
+const CELL=50, colors={player:'#66b9e8',ally:'#79c6a0',enemy:'#e47b73',neutral:'#b8a2dc'};
+let cols=18,rows=14,units=[],terrain=new Set(),selected=null,active=null,turnIndex=-1,round=0,combat=false,measureMode=false,measurePick=[],terrainMode=false,drag=null;
+const key=(x,y)=>`${x},${y}`, pos=(u)=>({x:u.x,y:u.y});
+function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1500)}
+function resize(){canvas.width=cols*CELL;canvas.height=rows*CELL;draw()}
+function occupied(x,y,except=null,size=1){for(const u of units){if(u===except)continue;for(let a=0;a<size;a++)for(let b=0;b<size;b++)if(x+a>=u.x&&x+a<u.x+u.size&&y+b>=u.y&&y+b<u.y+u.size)return true}return false}
+function openSpot(size=1){for(let y=0;y<rows-size+1;y++)for(let x=0;x<cols-size+1;x++)if(!occupied(x,y,null,size))return{x,y};return{x:0,y:0}}
+function draw(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#101820';ctx.fillRect(0,0,canvas.width,canvas.height);
+ for(const t of terrain){let [x,y]=t.split(',').map(Number);ctx.fillStyle='#66583b';ctx.fillRect(x*CELL,y*CELL,CELL,CELL);ctx.strokeStyle='#9d8757';ctx.lineWidth=1;for(let i=-CELL;i<CELL*2;i+=9){ctx.beginPath();ctx.moveTo(x*CELL+i,y*CELL);ctx.lineTo(x*CELL+i+CELL,y*CELL+CELL);ctx.stroke()}}
+ ctx.strokeStyle='#34424d';ctx.lineWidth=1;for(let x=0;x<=cols;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,rows*CELL);ctx.stroke()}for(let y=0;y<=rows;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(cols*CELL,y*CELL);ctx.stroke()}
+ for(const u of units){let x=u.x*CELL,y=u.y*CELL,w=u.size*CELL;ctx.fillStyle=colors[u.team];ctx.globalAlpha=.2;ctx.fillRect(x+3,y+3,w-6,w-6);ctx.globalAlpha=1;ctx.strokeStyle=u===selected?'#f1c66c':colors[u.team];ctx.lineWidth=u===selected?3:2;ctx.beginPath();ctx.roundRect(x+4,y+4,w-8,w-8,9);ctx.fillStyle='#17232c';ctx.fill();ctx.stroke();ctx.fillStyle=colors[u.team];ctx.beginPath();ctx.arc(x+w/2,y+w/2-4,Math.min(13,w/4),0,Math.PI*2);ctx.fill();ctx.fillStyle='#101820';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(u.name.slice(0,2).toUpperCase(),x+w/2,y+w/2-4);ctx.fillStyle='#f0f2f3';ctx.font='11px system-ui';ctx.fillText(u.name.slice(0,12),x+w/2,y+w-12);if(u===active){ctx.strokeStyle='#f1c66c';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.strokeRect(x+1,y+1,w-2,w-2);ctx.setLineDash([])}}
+ if(measurePick.length){for(const u of measurePick){ctx.strokeStyle='#f1c66c';ctx.lineWidth=3;ctx.strokeRect(u.x*CELL+2,u.y*CELL+2,u.size*CELL-4,u.size*CELL-4)}}
+}
+function renderRoster(){
+ $('roster').innerHTML='';
+ const ordered=[...units].sort((a,b)=>b.initiative-a.initiative);
+ for(const u of ordered){const d=document.createElement('div');d.className='unit'+(u===selected?' active':'')+(u===active?' turn-current':'');d.innerHTML=`<i class="dot" style="background:${colors[u.team]}"></i><div class="unit-info"><b></b><small></small></div><span class="mini"></span>`;d.querySelector('b').textContent=u.name;d.querySelector('small').textContent=`${u.initiative} init · ${u.speed} ft`;d.querySelector('.mini').textContent=u===active?'NOW':`${u.x+1},${u.y+1}`;d.onclick=()=>{selected=u;render();};$('roster').appendChild(d)}
+}
+function renderSelected(){let u=selected;$('edit').disabled=!u;$('remove').disabled=!u;if(!u){$('selectedInfo').textContent='Select a token on the battlefield or in the roster.';return}
+ const spent=u.spent||0,remaining=Math.max(0,u.speed-spent);
+ $('selectedInfo').innerHTML=`<b style="color:${colors[u.team]}">${escapeHtml(u.name)}</b><br>${u.team.toUpperCase()} · ${u.speed} ft speed<br>Position: column ${u.x+1}, row ${u.y+1}<br>Initiative: ${u.initiative}<br>Movement used: ${spent} ft<br>Movement remaining: ${remaining} ft`;
+}
+function renderCombat(){ $('round').textContent=combat?round:'—';$('turnLabel').textContent=combat?'Turn '+(turnIndex+1)+' of '+units.length:'Combat not started';$('activeName').textContent=active?active.name:'No active turn';let pct=active?Math.max(0,100*(active.speed-active.spent)/Math.max(1,active.speed)):0;$('movementBar').style.width=pct+'%';$('movementText').textContent=active?`Movement remaining: ${Math.max(0,active.speed-active.spent)} / ${active.speed} ft`:'Movement remaining: —';$('start').disabled=combat||!units.length;$('next').disabled=!combat||!units.length}
+function render(){draw();renderRoster();renderSelected();renderCombat()}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function addUnit(){let name=$('name').value.trim();if(!name){toast('Enter a creature name');return}let speed=Math.max(0,Number($('speed').value)||0),size=Number($('size').value),p=openSpot(size);let u={id:crypto.randomUUID(),name,team:$('team').value,speed,initiative:Number($('initiative').value)||0,size,...p,spent:0};units.push(u);selected=u;$('name').value='';render();toast(name+' added')}
+function hit(x,y){return units.find(u=>x>=u.x&&x<u.x+u.size&&y>=u.y&&y<u.y+u.size)}
+function moveUnit(u,x,y){if(x<0||y<0||x+u.size>cols||y+u.size>rows||occupied(x,y,u,u.size)){toast('That space is occupied or outside the map');return}
+ let dx=Math.abs(x-u.x),dy=Math.abs(y-u.y),steps=Math.max(dx,dy);if(!steps)return;
+ if(combat&&u!==active){toast('It is not this creature’s turn');return}
+ // Count one 10-ft square per Chebyshev step; double cost for each difficult-terrain destination square.
+ let cost=0,cx=u.x,cy=u.y;
+ for(let i=1;i<=steps;i++){let nx=u.x+Math.round(dx*i/steps)*Math.sign(x-u.x),ny=u.y+Math.round(dy*i/steps)*Math.sign(y-u.y);if(nx===cx&&ny===cy)continue;let difficult=terrain.has(key(nx,ny));cost+=10*(difficult?2:1);cx=nx;cy=ny}
+ let remaining=u.speed-(u.spent||0);if(combat&&cost>remaining){toast(`Not enough movement: ${remaining} ft left`);return}
+ if(combat)u.spent=(u.spent||0)+cost;u.x=x;u.y=y;selected=u;render();if(combat)toast(`Moved ${cost} ft · ${u.speed-u.spent} ft left`)}
+canvas.addEventListener('pointerdown',e=>{let r=canvas.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)*canvas.width/r.width/CELL),y=Math.floor((e.clientY-r.top)*canvas.height/r.height/CELL);if(x<0||y<0||x>=cols||y>=rows)return;
+ if(terrainMode){let k=key(x,y);terrain.has(k)?terrain.delete(k):terrain.add(k);draw();return}
+ let u=hit(x,y);if(measureMode){if(u){measurePick.push(u);if(measurePick.length===2){let a=measurePick[0],b=measurePick[1],dist=Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))*10;$('distanceInfo').innerHTML=`<b>${escapeHtml(a.name)}</b> to <b>${escapeHtml(b.name)}</b>: <strong style="color:var(--gold)">${dist} ft</strong> (${dist/10} grid squares, grid-counting distance).`;measurePick=[];measureMode=false;$('measure').textContent='↔ Measure distance';}draw()}return}
+ if(u){selected=u;drag={u,ox:x-u.x,oy:y-u.y,startX:x,startY:y,moved:false};render()}else{selected=null;render()}
+});
+canvas.addEventListener('pointerup',e=>{if(!drag)return;let r=canvas.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)*canvas.width/r.width/CELL)-drag.ox,y=Math.floor((e.clientY-r.top)*canvas.height/r.height/CELL)-drag.oy;if(x!==drag.u.x||y!==drag.u.y)moveUnit(drag.u,x,y);drag=null});
+$('add').onclick=addUnit;
+$('remove').onclick=()=>{if(!selected)return;units=units.filter(u=>u!==selected);if(active===selected)active=null;selected=null;render()};
+$('edit').onclick=()=>{if(!selected)return;let n=prompt('Creature name',selected.name);if(n===null)return;let s=prompt('Movement speed in feet',selected.speed);if(s===null)return;selected.name=n.trim()||selected.name;selected.speed=Math.max(0,Number(s)||0);render()};
+$('sort').onclick=()=>{units.sort((a,b)=>b.initiative-a.initiative);if(combat){turnIndex=units.indexOf(active)}render()};
+$('clear').onclick=()=>{if(!confirm('Remove all creatures and terrain?'))return;units=[];terrain.clear();selected=active=null;combat=false;turnIndex=-1;round=0;measurePick=[];render()};
+$('start').onclick=()=>{if(!units.length)return;units.sort((a,b)=>b.initiative-a.initiative);combat=true;round=1;turnIndex=0;active=units[0];units.forEach(u=>u.spent=0);selected=active;render();toast(active.name+' begins the first turn')};
+$('next').onclick=()=>{if(!combat||!units.length)return;turnIndex=(turnIndex+1)%units.length;if(turnIndex===0)round++;active=units[turnIndex];active.spent=0;selected=active;render();toast('Round '+round+' · '+active.name+'’s turn')};
+$('measure').onclick=()=>{measureMode=!measureMode;measurePick=[];$('measure').textContent=measureMode?'Click two creatures…':'↔ Measure distance';$('distanceInfo').textContent=measureMode?'Click the first creature, then the second.':'Choose “Measure distance,” then click two creatures to calculate their grid distance.';draw()};
+$('terrain').onclick=()=>{terrainMode=!terrainMode;$('terrain').textContent='◇ Difficult terrain: '+(terrainMode?'ON':'off');toast(terrainMode?'Click squares to mark difficult terrain':'Terrain editing off')};
+$('gridSize').onclick=()=>{let c=prompt('Grid width (8–30 squares)',cols),r=prompt('Grid height (8–24 squares)',rows);if(c===null||r===null)return;cols=Math.min(30,Math.max(8,Number(c)||18));rows=Math.min(24,Math.max(8,Number(r)||14));resize()};
+render();resize();
+})();
+</script>
+</body></html>
