@@ -1,8 +1,19 @@
+<!-- Declares that this page uses modern HTML. -->
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Initiative — D&D Battle Grid</title>
+<!-- The html element contains the whole page; lang identifies the page language. -->
+<html lang="en"><head>
+<!-- The head contains page information and links to supporting files. --><!-- Sets text encoding so letters and symbols display correctly. -->
+<meta charset="utf-8"><!-- Helps the page fit phone, tablet, and desktop screens. -->
+<meta name="viewport" content="width=device-width,initial-scale=1"><!-- The title appears in the browser tab. -->
+<title>Initiative — D&D Battle Grid</title>
+<!-- Loads the separate CSS file that controls the page appearance. -->
 <link rel="stylesheet" href="style.css"></head><body>
+<!-- The body contains everything visible on the webpage. -->
+<!-- The top banner displays the battle tracker name and grid scale. -->
 <header>⚔ INITIATIVE <small>D&D 5E BATTLE GRID · 10 FEET PER SQUARE</small></header>
+<!-- Main layout: creature roster, battlefield, and combat tools. -->
 <main class="layout">
+<!-- Left sidebar: form for adding creatures and the initiative roster. -->
 <aside class="panel"><h2>Creature roster</h2>
 <div class="field"><label>Name</label><input id="name" placeholder="Goblin, Aria…"></div>
 <div class="row"><div class="field"><label>Side</label><select id="team"><option value="player">Player</option><option value="ally">Ally</option><option value="enemy">Enemy</option><option value="neutral">Neutral</option></select></div><div class="field"><label>Speed (ft)</label><input id="speed" type="number" min="0" value="30"></div></div>
@@ -10,11 +21,15 @@
 <button class="primary" id="add" style="width:100%">＋ Add creature</button><p class="hint">New creatures appear in the first open space. Click a token to select it, then drag to move.</p>
 <hr><h2>Initiative order</h2><div id="roster"></div><div class="row"><button id="sort">Sort initiative</button><button id="clear" class="danger">Clear all</button></div>
 </aside>
+<!-- Center section: battlefield grid where tokens and terrain appear. -->
 <section><div class="boardhead"><b>Battlefield <span class="muted">· each square = 10 ft</span></b><div class="row"><button id="measure">↔ Measure</button><button id="terrain">Difficult terrain: off</button><button id="grid">Grid: 18 × 14</button></div></div>
 <div class="boardwrap"><canvas id="board"></canvas></div><div class="legend">🔵 Player　🟢 Ally　🔴 Enemy　🟣 Neutral　▧ Difficult terrain</div><p class="hint">During combat, only the active creature can move. Movement is deducted from its speed. Diagonal squares count as 10 feet in this simplified grid mode.</p></section>
+<!-- Right sidebar: combat status, selected creature details, and movement rules. -->
 <aside class="right">
 <div class="panel"><h2>Combat tracker</h2><div class="stat"><small class="muted">ROUND</small><div class="big" id="round">—</div><small id="turnlabel" class="muted">Combat not started</small></div><div class="stat"><small class="muted">ACTIVE CREATURE</small><b id="activeName">No active turn</b><div class="meter"><span id="bar"></span></div><small id="remaining" class="muted">Movement remaining: —</small></div><div class="row"><button class="primary" id="start">Start combat</button><button id="next" disabled>Next turn →</button></div></div>
 <div class="panel"><h2>Selected creature</h2><div id="selectedInfo">Select a creature on the map or in the roster.</div><div class="row" style="margin-top:10px"><button id="edit" disabled>Edit</button><button id="remove" class="danger" disabled>Remove</button></div><hr><h2>Distance</h2><div id="distanceInfo">Choose Measure, then click two creatures.</div></div>
 <div class="panel"><h2>Movement rules</h2><p class="hint">Creature speed comes from its character sheet or monster stat block. Difficult terrain costs double movement. This adapts the 2014 D&D 5e movement rules to a custom 10-foot grid; the official grid variant uses 5-foot squares.</p><p class="hint"><a href="https://www.dndbeyond.com/sources/dnd/basic-rules-2014/combat#MovementandPosition">2014 Basic Rules: Movement and Position</a></p></div>
-</aside></main><div id="toast" class="toast"></div>
+</aside></main><!-- Temporary notification area; JavaScript displays messages here. -->
+<div id="toast" class="toast"></div>
+<!-- Loads JavaScript after the HTML is parsed; JavaScript makes the controls interactive. -->
 <script src="script.js" defer></script></body></html>
